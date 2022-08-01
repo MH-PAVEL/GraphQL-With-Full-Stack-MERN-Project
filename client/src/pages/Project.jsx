@@ -1,4 +1,4 @@
-import { useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import {
   Box,
   Button,
@@ -14,22 +14,30 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { Link, useParams } from "react-router-dom";
-import { GET_PROJECT } from "../queries/projectQuery";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { GET_PROJECT, GET_PROJECTS } from "../queries/projectQuery";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import EmailIcon from "@mui/icons-material/Email";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
+import { DELETE_PROJECT } from "../mutations/projectMutations";
+import EditProject from "../components/EditProject";
 
 const Project = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { loading, error, data } = useQuery(GET_PROJECT, {
     variables: { id },
+  });
+
+  const [deleteProject] = useMutation(DELETE_PROJECT, {
+    variables: { id },
+    onCompleted: () => navigate("/"),
+    refetchQueries: [{ query: GET_PROJECTS }],
   });
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error :( somethings went wrong!</p>;
 
-  console.log(data, "data from project page");
   return (
     <div>
       <Container>
@@ -109,6 +117,24 @@ const Project = () => {
                     </ListItemButton>
                   </List>
                 </Box>
+
+                <Box sx={{ mt: 2 }}>
+                  <EditProject project={data.project} />
+                </Box>
+
+                <Stack
+                  sx={{ mt: 2 }}
+                  justifyContent="flex-end"
+                  alignItems="flex-end"
+                >
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={deleteProject}
+                  >
+                    Delete Project
+                  </Button>
+                </Stack>
               </CardContent>
             </Card>
           </Grid>

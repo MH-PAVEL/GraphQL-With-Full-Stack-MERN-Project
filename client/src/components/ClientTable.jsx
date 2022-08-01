@@ -11,19 +11,20 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useMutation } from "@apollo/client";
 import { DELETE_CLIENT } from "../mutations/clientMutations";
 import { GET_CLIENTS } from "../queries/ClientQuery";
+import { GET_PROJECTS } from "../queries/projectQuery";
 
 const TableRows = ({ client }) => {
   console.log(client, "check");
   const [deleteClient] = useMutation(DELETE_CLIENT, {
     variables: { id: client.id },
-    // refetchQueries: [{ query: GET_CLIENTS }],
-    update(cache, { data: { deleteClient } }) {
-      const { clients } = cache.readQuery({ query: GET_CLIENTS });
-      cache.writeQuery({
-        query: GET_CLIENTS,
-        data: { clients: clients.filter((c) => c.id !== client.id) },
-      });
-    },
+    refetchQueries: [{ query: GET_CLIENTS }, { query: GET_PROJECTS }],
+    // update(cache, { data: { deleteClient } }) {
+    //   const { clients } = cache.readQuery({ query: GET_CLIENTS });
+    //   cache.writeQuery({
+    //     query: GET_CLIENTS,
+    //     data: { clients: clients.filter((c) => c.id !== client.id) },
+    //   });
+    // },
   });
   return (
     <TableRow

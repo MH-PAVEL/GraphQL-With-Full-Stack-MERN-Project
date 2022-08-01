@@ -8,10 +8,19 @@ import DialogActions from "@mui/material/DialogActions";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import TextField from "@mui/material/TextField";
-import { Box } from "@mui/material";
-import { useMutation } from "@apollo/client";
-import { ADD_CLIENT } from "../mutations/clientMutations";
+import { Box, Typography } from "@mui/material";
+import { useMutation, useQuery } from "@apollo/client";
 import { GET_CLIENTS } from "../queries/ClientQuery";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormControl from "@mui/material/FormControl";
+import FormLabel from "@mui/material/FormLabel";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import { ADD_PROJECT } from "../mutations/projectMutations";
+import { GET_PROJECTS } from "../queries/projectQuery";
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialogContent-root": {
@@ -48,11 +57,15 @@ const BootstrapDialogTitle = (props) => {
 
 export default function AddProject() {
   const [open, setOpen] = React.useState(false);
-  const [data, setData] = React.useState({
+  const [value, setValue] = React.useState({
     name: "",
     description: "",
     status: "new",
   });
+  const [clientId, setClientId] = React.useState("");
+
+  // get clients for select
+  const { loading, error, data } = useQuery(GET_CLIENTS);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -62,35 +75,46 @@ export default function AddProject() {
   };
 
   const handleChange = (prop) => (event) => {
-    setData({ ...data, [prop]: event.target.value });
+    setValue({ ...value, [prop]: event.target.value });
   };
 
-  const [addClient] = useMutation(ADD_CLIENT, {
+  const handleStatusChange = (event) => {
+    setValue({ ...value, status: event.target.value });
+  };
+
+  const handleClientChange = (event) => {
+    setClientId(event.target.value);
+  };
+
+  const [addProject] = useMutation(ADD_PROJECT, {
     variables: {
-      name: data.name,
-      description: data.description,
-      status: data.status,
+      name: value.name,
+      description: value.description,
+      status: value.status,
+      clientId: clientId,
     },
-    update(cache, { data: { addClient } }) {
-      const { clients } = cache.readQuery({ query: GET_CLIENTS });
+    update(cache, { data: { addProject } }) {
+      const { projects } = cache.readQuery({ query: GET_PROJECTS });
       cache.writeQuery({
-        query: GET_CLIENTS,
-        data: { clients: clients.concat([addClient]) },
+        query: GET_PROJECTS,
+        data: { projects: [...projects, addProject] },
       });
     },
   });
 
   const handleSubmit = () => {
-    if (data.name && data.description && data.status) {
-      addClient(data.name, data.description, data.status);
+    if (value.name && value.description && value.status) {
+      addProject(value.name, value.description, value.status, clientId);
       setOpen(false);
     }
 
-    setData({
+    setValue({
       name: "",
       description: "",
-      status: "",
+      status: "new",
     });
+
+    setClientId("");
   };
 
   return (
@@ -115,7 +139,7 @@ export default function AddProject() {
               id="outlined-basic"
               label="Name"
               variant="outlined"
-              value={data.name}
+              value={value.name}
               onChange={handleChange("name")}
               fullWidth
             />
@@ -126,20 +150,74 @@ export default function AddProject() {
               label="description"
               variant="outlined"
               rows={4}
-              value={data.description}
+              value={value.description}
               onChange={handleChange("description")}
               fullWidth
             />
           </Box>
           <Box sx={{ my: 2, width: { sm: "500px", sx: "320px" } }}>
-            <TextField
+            {/* <TextField
               id="outlined-basic"
               label="status"
               variant="outlined"
-              value={data.status}
+              value={value.status}
               onChange={handleChange("status")}
               fullWidth
-            />
+            /> */}
+
+            <FormControl>
+              <FormLabel id="demo-controlled-radio-buttons-group">
+                Status
+              </FormLabel>
+
+              <RadioGroup
+                aria-labelledby="demo-radio-buttons-group-label"
+                // defaultValue="female"
+                name="radio-buttons-group"
+                value={value.status}
+                onChange={handleStatusChange}
+              >
+                <FormControlLabel
+                  value="new"
+                  control={<Radio />}
+                  label="Not Started"
+                />
+                <FormControlLabel
+                  value="progress"
+                  control={<Radio />}
+                  label="In Progress"
+                />
+                <FormControlLabel
+                  value="completed"
+                  control={<Radio />}
+                  label="Completed"
+                />
+              </RadioGroup>
+            </FormControl>
+          </Box>
+
+          <Box>
+            <Typography variant="h6" color="inherit">
+              <strong>Client</strong>
+            </Typography>
+
+            <FormControl sx={{ m: 0, mt: 1, minWidth: 200 }} size="small">
+              <InputLabel id="demo-select-small">Select Client</InputLabel>
+              <Select
+                labelId="demo-select-small"
+                id="demo-select-small"
+                value={clientId}
+                // label="Age"
+                onChange={handleClientChange}
+              >
+                {data &&
+                  data.clients.map((client) => (
+                    <MenuItem key={client.id} value={client.id}>
+                      {client.name}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>
