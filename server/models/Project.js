@@ -12,7 +12,7 @@ const ProjectSchema = new mongoose.Schema({
     enum: ["Not Started", "In Progress", "Completed"],
   },
   //   add relationship to client
-  client: {
+  clientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Client",
   },

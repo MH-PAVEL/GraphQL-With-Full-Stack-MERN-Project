@@ -1,7 +1,8 @@
 import { gql, useQuery } from "@apollo/client";
-import { Container } from "@mui/material";
+import { Container, Stack } from "@mui/material";
 import React from "react";
 import { GET_CLIENTS } from "../queries/ClientQuery";
+import AddClient from "./AddClient";
 import ClientTable from "./ClientTable";
 
 // const GET_CLIENTS = gql`
@@ -24,6 +25,9 @@ const Clients = () => {
   return (
     <div>
       <Container>
+        <Stack sx={{ width: "100%", my: 2 }} alignItems="flex-end">
+          <AddClient />
+        </Stack>
         {!loading && data && <ClientTable data={data.clients} />}
       </Container>
     </div>
